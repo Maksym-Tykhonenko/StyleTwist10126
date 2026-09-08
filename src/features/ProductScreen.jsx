@@ -25,11 +25,10 @@ const ProductScreen = ({ route }) => {
   const externalAppOpenedRef = useRef(false);
   const loadingTimeoutRef = useRef(null);
 
-  //console.log('My product Url in WebView ==>', product);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
-      //console.log('APP STATE ==>', nextState);
+
 
       if (nextState === 'active' && externalAppOpenedRef.current) {
         externalAppOpenedRef.current = false;
@@ -52,9 +51,6 @@ const ProductScreen = ({ route }) => {
     };
   }, []);
 
-  /**
-   * URL-схеми, які дозволено відкривати всередині WebView.
-   */
   const isWebViewScheme = url => {
     if (!url) {
       return false;
@@ -71,10 +67,6 @@ const ProductScreen = ({ route }) => {
     );
   };
 
-  /**
-   * JavaScript URL не відкриваємо ані у WebView,
-   * ані через зовнішній застосунок.
-   */
   const isJavascriptScheme = url => {
     if (!url) {
       return false;
@@ -88,15 +80,6 @@ const ProductScreen = ({ route }) => {
     return match ? decodeURIComponent(match[1]) : null;
   };
 
-  /**
-   * Відкриває deep link або системну URL-схему
-   * через відповідний застосунок на пристрої.
-   *
-   * FIX: не використовуємо Linking.canOpenURL.
-   * На iOS він може повернути false без LSApplicationQueriesSchemes,
-   * навіть якщо застосунок встановлений. Тому відкриваємо напряму
-   * через Linking.openURL, а fallback показуємо тільки в catch.
-   */
   const openExternalUrl = async url => {
     if (!url) {
       return;
@@ -106,7 +89,6 @@ const ProductScreen = ({ route }) => {
     externalAppOpenedRef.current = true;
 
     try {
-      //console.log('EXTERNAL URL ==>', url);
 
       await Linking.openURL(url);
     } catch (error) {
@@ -121,12 +103,6 @@ const ProductScreen = ({ route }) => {
     }
   };
 
-  /**
-   * FIX: окремі provider/bank URL треба перетворювати
-   * у нативні banking schemes. Інакше WebView відкриває web-сторінку
-   * банку всередині себе або показує fallback "App not installed",
-   * хоча банківський застосунок може бути встановлений.
-   */
   const handleBankRedirect = url => {
     const normalizedUrl = url.toLowerCase();
 
@@ -201,9 +177,7 @@ const ProductScreen = ({ route }) => {
     return false;
   };
 
-  /**
-   * Допоміжна функція для переходу WebView на інший URL.
-   */
+
   const navigateWebViewToUrl = url => {
     if (!url || !refWebview.current) {
       return;
@@ -215,15 +189,11 @@ const ProductScreen = ({ route }) => {
     `);
   };
 
-  /**
-   * Обробка змін навігації всередині WebView.
-   * Тут залишена твоя спеціальна платіжна логіка.
-   */
+
   const handleNavigationStateChange = navState => {
     const url = navState?.url || '';
 
-    //console.log('NavigationState ==>', navState);
-
+   
     if (
       url.includes(
         'https://api.paymentiq.io/paymentiq/api/piq-redirect-assistance',
@@ -268,17 +238,9 @@ const ProductScreen = ({ route }) => {
     }
   };
 
-  /**
-   * Основна універсальна обробка всіх URL.
-   *
-   * http / https / about / blob / data -> WebView
-   * javascript -> блокувати
-   * всі інші схеми -> зовнішній застосунок
-   */
+
   const onShouldStartLoadWithRequest = event => {
     const url = event?.url;
-
-    //console.log('onShouldStartLoadWithRequest ==>', event);
 
     if (!url) {
       setIsLoading(false);
@@ -292,8 +254,7 @@ const ProductScreen = ({ route }) => {
     }
 
     if (handleBankRedirect(url)) {
-      // FIX: навігацію в WebView скасовуємо, loader ховаємо,
-      // бо далі користувач іде в native banking app.
+      
       setIsLoading(false);
       return false;
     }
@@ -304,17 +265,14 @@ const ProductScreen = ({ route }) => {
     }
 
     openExternalUrl(url);
-    // FIX: зовнішня схема не дасть onLoadEnd у WebView,
-    // тому loader треба прибрати вручну.
+   
     setIsLoading(false);
 
-    // Не дозволяємо WebView обробляти зовнішню схему.
+   
     return false;
   };
 
-  /**
-   * Обробка window.open / target="_blank".
-   */
+
   const handleOpenWindow = event => {
     const targetUrl = event?.nativeEvent?.targetUrl;
 
@@ -332,8 +290,8 @@ const ProductScreen = ({ route }) => {
     }
 
     if (handleBankRedirect(targetUrl)) {
-      // FIX: target=_blank/window.open для банків обробляємо так само,
-      // як звичайну навігацію, без зависання поточного WebView.
+      
+      
       setIsLoading(false);
       return;
     }
@@ -344,8 +302,8 @@ const ProductScreen = ({ route }) => {
     }
 
     openExternalUrl(targetUrl);
-    // FIX: якщо window.open веде у native app, WebView не завжди
-    // віддає onLoadEnd, тому loader прибираємо тут.
+   
+    
     setIsLoading(false);
   };
 
@@ -356,8 +314,8 @@ const ProductScreen = ({ route }) => {
     setIsLoading(false);
     console.warn('WebView error ==>', nativeEvent);
 
-    // about:blank іноді використовується як технічна сторінка
-    // під час редиректів, тому окремо нічого не показуємо.
+   
+    
     if (url.startsWith('about:')) {
       return;
     }
