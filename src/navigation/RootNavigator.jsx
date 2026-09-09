@@ -35,26 +35,15 @@ const Stack = createNativeStackNavigator();
 
 function Navigation() {
   const [route, setRoute] = useState(false);
-  const [responseToPushPermition, setResponseToPushPermition] = useState(false);
-  const [uniqVisit, setUniqVisit] = useState(true);
-  const [addPartToLinkOnce, setAddPartToLinkOnce] = useState(true);
   const [oneSignalId, setOneSignalId] = useState(null);
-  const [sab1, setSab1] = useState();
   const [atribParam, setAtribParam] = useState(null);
-  const [idfa, setIdfa] = useState(null);
-  const [aceptTransperency, setAceptTransperency] = useState(false);
-  const [adServicesAtribution, setAdServicesAtribution] = useState(null);
   const [isDataReady, setIsDataReady] = useState(false);
   const [completeLink, setCompleteLink] = useState(false);
   const [finalLink, setFinalLink] = useState('');
   const [pushOpenWebview, setPushOpenWebview] = useState(false);
   const [timeStampUserId, setTimeStampUserId] = useState(false);
-  const [checkAsaData, setCheckAsaData] = useState(null);
   const [cloacaPass, setCloacaPass] = useState(null);
   const [customUserAgent, setCustomUserAgent] = useState(null);
-  const [extinfo, setExtinfo] = useState(null);
-  const [idfv, setIdfv] = useState(null);
-  const [uid, setUid] = useState(null);
 
   const pushOpenWebviewRef = useRef(false);
 
@@ -99,7 +88,6 @@ function Navigation() {
         `${HBJYBJBJB_BJL}${YHBKJNBUKN_ID}?utretg=uniq_visit&jthrhg=${timestamp_user_id}`,
       );
       OneSignal.User.addTag('timestamp_user_id', timestamp_user_id);
-      setUniqVisit(false);
       await AsyncStorage.setItem('uniqVisitStatus', 'sent');
     } else {
       if (storedTimeStampUserId) {
@@ -114,25 +102,13 @@ function Navigation() {
       if (jsonData !== null) {
         const parsedData = JSON.parse(jsonData);
         setRoute(parsedData.route);
-        setResponseToPushPermition(parsedData.responseToPushPermition);
-        setUniqVisit(parsedData.uniqVisit);
         setOneSignalId(parsedData.oneSignalId);
-        setSab1(parsedData.sab1);
         setAtribParam(parsedData.atribParam);
-        setAdServicesAtribution(parsedData.adServicesAtribution);
-        setCheckAsaData(parsedData.checkAsaData);
         setCloacaPass(parsedData.cloacaPass);
         setCustomUserAgent(parsedData.customUserAgent);
-        setIdfa(parsedData.idfa ?? null);
-        setIdfv(parsedData.idfv ?? null);
-        setAceptTransperency(parsedData.aceptTransperency ?? false);
-        setUid(parsedData.uid);
         setIsDataReady(parsedData.isDataReady);
         setTimeStampUserId(parsedData.timeStampUserId);
       } else {
-        const uniqueId = await DeviceInfo.getUniqueId();
-        setIdfv(uniqueId);
-
         await waitForAppActive();
         await delay(1200);
 
@@ -166,18 +142,10 @@ function Navigation() {
     try {
       const data = {
         route,
-        responseToPushPermition,
-        uniqVisit,
         oneSignalId,
-        sab1,
         atribParam,
-        adServicesAtribution,
-        checkAsaData,
         cloacaPass,
         customUserAgent,
-        idfa,
-        aceptTransperency,
-        uid,
         isDataReady,
         timeStampUserId,
       };
@@ -191,18 +159,10 @@ function Navigation() {
     setData();
   }, [
     route,
-    responseToPushPermition,
-    uniqVisit,
     oneSignalId,
-    sab1,
     atribParam,
-    adServicesAtribution,
-    checkAsaData,
     cloacaPass,
     customUserAgent,
-    idfa,
-    aceptTransperency,
-    uid,
     isDataReady,
     timeStampUserId,
   ]);
@@ -210,9 +170,7 @@ function Navigation() {
   const jkdsvbdsjkvndskvndskj = () => {
     return new Promise((resolve, reject) => {
       try {
-        OneSignal.Notifications.requestPermission(true).then(res => {
-          setResponseToPushPermition(res);
-
+        OneSignal.Notifications.requestPermission(true).then(() => {
           const maxRetries = 5;
           let attempts = 0;
 
@@ -291,7 +249,7 @@ function Navigation() {
         fetch(pushEventUrl).catch(error => {
         });
 
-        if (isDataReady && uid) {
+        if (isDataReady) {
           await fdjkvndfjvbfkdLIN(true);
         }
       } catch (error) {
@@ -330,53 +288,67 @@ function Navigation() {
 
     const dsjcbsdjhbcvhjsdbCLO = async () => {
       try {
-    const baseUserAgent = await DeviceInfo.getUserAgent();
+        const baseUserAgent = await DeviceInfo.getUserAgent();
 
-    const systemVersion = DeviceInfo.getSystemVersion();
+        const uaMatch = baseUserAgent.match(
+          /CPU iPhone OS ([0-9_]+)/,
+        );
 
-    const systemName = DeviceInfo.getSystemName();
+        const systemVersionFromUA = uaMatch?.[1]
+          ? uaMatch[1].replace(/_/g, '.')
+          : null;
 
-    const deviceIdentifier = DeviceInfo.getDeviceId();
+        const fallbackSystemVersion =
+          DeviceInfo.getSystemVersion();
 
-    const screenScale = PixelRatio.get();
+        const systemVersion =
+          systemVersionFromUA || fallbackSystemVersion;
 
-    const preferredLanguage =
-      Intl.DateTimeFormat().resolvedOptions().locale || 'en-US';
+        const systemName = DeviceInfo.getSystemName();
 
-    const deviceModelName =
-      Platform.OS === 'ios' ? 'iPhone' : 'Unknown';
+        const deviceIdentifier = DeviceInfo.getDeviceId();
 
-    const deviceType = 'phone';
+        const screenScale = PixelRatio.get();
 
-    const deviceInfo =
-      `[FBDV/${deviceIdentifier};` +
-      `FBMD/${deviceModelName};` +
-      `FBSN/${systemName};` +
-      `FBSV/${systemVersion};` +
-      `FBSS/${screenScale};` +
-      `FBID/${deviceType};` +
-      `FBLC/${preferredLanguage}]`;
+        const preferredLanguage =
+          Intl.DateTimeFormat().resolvedOptions().locale || 'en-US';
 
-    const customUserAgent =
-      `${baseUserAgent} ` +
-      `Version/${systemVersion} ` +
-      `Safari/604.1 ` +
-      `${deviceInfo}`;
+        const deviceModelName =
+          Platform.OS === 'ios' ? 'iPhone' : 'Unknown';
 
-    console.log(
-      'CUSTOM USER AGENT ===>',
-      customUserAgent,
-    );
+        const deviceType = 'phone';
+
+        const deviceInfo =
+          `[FBDV/${deviceIdentifier};` +
+          `FBMD/${deviceModelName};` +
+          `FBSN/${systemName};` +
+          `FBSV/${systemVersion};` +
+          `FBSS/${screenScale};` +
+          `FBID/${deviceType};` +
+          `FBLC/${preferredLanguage}]`;
+
+        const customUserAgent =
+          `${baseUserAgent} ` +
+          `Version/${systemVersion} ` +
+          `Safari/604.1 ` +
+          `${deviceInfo}`;
+
+        console.log(
+          'CUSTOM USER AGENT ===>',
+          customUserAgent,
+        );
 
         setCustomUserAgent(customUserAgent);
 
         const controller = new AbortController();
+
         const timeoutId = setTimeout(
           () => controller.abort(),
           TIMINGS.cloakaRequestTimeout,
         );
 
         let r;
+
         try {
           r = await fetch(checkUrl, {
             method: 'GET',
