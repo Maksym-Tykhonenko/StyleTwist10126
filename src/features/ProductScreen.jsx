@@ -7,9 +7,10 @@ import {
   Linking,
   TouchableOpacity,
   View,
+  SafeAreaView
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { SafeAreaView } from 'react-native-safe-area-context';
+//import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProductScreen = ({ route }) => {
   const [product] = useState(route.params?.product);

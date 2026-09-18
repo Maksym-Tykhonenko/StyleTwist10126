@@ -1,5 +1,5 @@
-import React,{ useCallback, useEffect, useState, useRef}  from 'react';
-import {NavigationContainer, DefaultTheme, StackActions, useNavigationContainerRef } from '@react-navigation/native';
+import React,{ useCallback, useEffect, useState, useRef}  from 'react';///
+import {NavigationContainer, DefaultTheme, StackActions, useNavigationContainerRef } from '@react-navigation/native';////
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import ArticleScreen from '../features/journal/screens/ArticleScreen';
@@ -11,7 +11,7 @@ import {StoreProvider} from '../store';
 import {colors} from '../theme';
 import MainTabs from './MainTabs';
 import {RootStackParamList} from './types';
-import { ActivityIndicator, View, StyleSheet, PixelRatio, Platform, Alert, AppState, StatusBar } from 'react-native';
+import { ActivityIndicator, View, StyleSheet, PixelRatio, Platform, Alert, AppState, StatusBar } from 'react-native';///
 import ProductScreen from '../features/ProductScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {LogLevel, OneSignal} from 'react-native-onesignal';

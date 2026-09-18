@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: Style Twist
+      app_store_connect: StyleTwistApiKey
     environment:
       ios_signing:
         distribution_type: app_store
@@ -50,4 +50,4 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_app_store: true
-        copyright: Cierra Barrett
+        copyright: Witt Jef
