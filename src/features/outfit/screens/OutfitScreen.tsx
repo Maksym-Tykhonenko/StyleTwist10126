@@ -1,8 +1,18 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {FlatList, Image, Modal, Pressable, Text, View} from 'react-native';
 import {categories, Category, Clothing} from '../../../data/clothing';
 import {useStore} from '../../../store';
 import {Button, Header, Mentor, MotionPressable, Screen, styles as s} from '../../../ui/AppUI';
+import {useLookShare} from '../../share/useLookShare';
+import TodaysLookCard from '../TodaysLookCard';
+import {getTodaysLook} from '../todaysLook';
+
+const VERDICT_SCORE = 84;
+
+const lookShareMessage = (items: Clothing[], score?: number) =>
+  `My Style Twist look:\n\n${items.map(item => `${item.category}: ${item.name}`).join('\n')}${
+    typeof score === 'number' ? `\n\nMarco's score: ${score}/100` : ''
+  }\n\nStyled with Style Twist.`;
 
 export default function OutfitScreen() {
   const {clothes, saveOutfit, savedOutfits} = useStore();
@@ -10,6 +20,8 @@ export default function OutfitScreen() {
   const [picker, setPicker] = useState<Category | null>(null);
   const [analysing, setAnalysing] = useState(false);
   const [verdict, setVerdict] = useState(false);
+  const {shareLook, host, sharing} = useLookShare();
+  const todaysLook = useMemo(() => getTodaysLook(clothes), [clothes]);
   const complete = categories.every(category => selected[category]);
   const selectedItems = categories.map(category => selected[category]).filter(Boolean) as Clothing[];
   const savedIds = selectedItems.map(item => item.id).sort().join('|');
@@ -22,6 +34,40 @@ export default function OutfitScreen() {
       setVerdict(true);
     }, 2200);
   };
+
+  const styleTodaysLook = () => {
+    if (!todaysLook) {
+      return;
+    }
+    const next: Partial<Record<Category, Clothing>> = {};
+    todaysLook.items.forEach(item => {
+      next[item.category] = item;
+    });
+    setSelected(next);
+  };
+
+  const shareTodaysLook = () => {
+    if (!todaysLook) {
+      return;
+    }
+    shareLook({
+      items: todaysLook.items,
+      title: 'My Look of the Day',
+      subtitle: todaysLook.focus,
+      caption: todaysLook.note,
+      message: lookShareMessage(todaysLook.items),
+    });
+  };
+
+  const shareVerdict = () =>
+    shareLook({
+      items: selectedItems,
+      title: 'Marco’s Verdict',
+      subtitle: 'Balanced · Modern · Confident',
+      score: VERDICT_SCORE,
+      caption: 'Clean silhouette, controlled palette, every layer with a clear purpose.',
+      message: lookShareMessage(selectedItems, VERDICT_SCORE),
+    });
 
   if (analysing) {
     return (
@@ -52,8 +98,10 @@ export default function OutfitScreen() {
           <Text style={s.eyebrow}>WHAT WORKS</Text>
           <Text style={s.body}>The silhouette stays clean, the palette is controlled, and every layer has a clear purpose.</Text>
         </View>
-        <Button secondary={outfitSaved} label={outfitSaved ? '✓  Look Saved' : '◇  Save This Look'} onPress={() => saveOutfit(selectedItems, 84)} />
+        <Button secondary={outfitSaved} label={outfitSaved ? '✓  Look Saved' : '◇  Save This Look'} onPress={() => saveOutfit(selectedItems, VERDICT_SCORE)} />
+        <Button secondary label={sharing ? 'Preparing…' : '↗  Share This Look'} onPress={shareVerdict} disabled={sharing} />
         <Button label="Build Another Outfit" onPress={() => { setVerdict(false); setSelected({}); }} />
+        {host}
       </Screen>
     );
   }
@@ -61,6 +109,7 @@ export default function OutfitScreen() {
   return (
     <Screen>
       <Header eyebrow="STYLE STUDIO" title="Outfit Builder" />
+      {todaysLook && <TodaysLookCard look={todaysLook} onStyle={styleTodaysLook} onShare={shareTodaysLook} sharing={sharing} />}
       <Text style={s.body}>Fill all five slots, then let Marco review the complete look.</Text>
       <View style={s.progressRow}>{categories.map(category => <View key={category} style={[s.progress, selected[category] && s.progressActive]} />)}</View>
       <View style={s.outfitGrid}>
@@ -104,6 +153,7 @@ export default function OutfitScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      {host}
     </Screen>
   );
 }

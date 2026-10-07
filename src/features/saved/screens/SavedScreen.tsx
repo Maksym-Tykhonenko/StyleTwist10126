@@ -1,9 +1,10 @@
 import React, {useMemo, useState} from 'react';
-import {Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, Text, TextInput, View} from 'react-native';
+import {Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View} from 'react-native';
 import {Clothing} from '../../../data/clothing';
 import {PlannedLook, TripPlan, useStore} from '../../../store';
 import {colors} from '../../../theme';
 import {Button, Header, Mentor, Screen, styles as s} from '../../../ui/AppUI';
+import {useLookShare} from '../../share/useLookShare';
 
 type ViewMode = 'Planner' | 'Trips' | 'Library';
 type LibraryMode = 'All' | 'Looks' | 'Advice';
@@ -64,6 +65,23 @@ const formatDate = (value: string) =>
 
 const isUpcoming = (value: string) => new Date(`${value}T23:59:59`).getTime() >= Date.now();
 
+const tripCountdownLabel = (startDate: string, duration: number) => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const start = new Date(`${startDate}T00:00:00`);
+  const days = Math.round((start.getTime() - startOfToday.getTime()) / 86400000);
+  if (days > 1) {
+    return `in ${days} days`;
+  }
+  if (days === 1) {
+    return 'tomorrow';
+  }
+  if (days === 0) {
+    return 'today';
+  }
+  return days >= -duration ? 'on trip now' : 'completed';
+};
+
 const getSuggestedItems = (occasion: string, clothes: Clothing[]) => {
   const keywords = occasionKeywords[occasion] ?? [];
   return categories.flatMap(category => {
@@ -112,6 +130,7 @@ export default function SavedScreen() {
     deletePlannedLook,
     addTripPlan,
     toggleTripPackedItem,
+    setTripPackedAll,
     deleteTripPlan,
   } = useStore();
   const [view, setView] = useState<ViewMode>('Planner');
@@ -130,6 +149,7 @@ export default function SavedScreen() {
   const [tripDuration, setTripDuration] = useState('4');
   const [tripVibe, setTripVibe] = useState('Business Trip');
   const [tripNotes, setTripNotes] = useState('');
+  const {shareLook, host: shareHost} = useLookShare();
 
   const query = search.toLowerCase();
   const filteredOutfits = savedOutfits.filter(item =>
@@ -380,6 +400,7 @@ export default function SavedScreen() {
                     <Text style={[s.adviceTag, s.tripTag]}>{trip.vibe.toUpperCase()}</Text>
                     <Text style={s.title}>{trip.title}</Text>
                     <Text style={s.body}>{trip.destination} · {formatDate(trip.startDate)} · {trip.duration} days</Text>
+                    <Text style={[s.goldText, s.tripTag]}>Departs {tripCountdownLabel(trip.startDate, trip.duration)}</Text>
                   </View>
                   <View style={s.tripCounter}>
                     <Text style={s.tripCounterValue}>{trip.packedChecklist.length}/{trip.packingChecklist.length}</Text>
@@ -422,6 +443,21 @@ export default function SavedScreen() {
                     <Text style={s.cardTitle}>Packing checklist</Text>
                     <Text style={s.goldText}>{trip.packedChecklist.length}/{trip.packingChecklist.length}</Text>
                   </View>
+                  <View style={local.packTrack}>
+                    <View
+                      style={[
+                        local.packFill,
+                        {width: `${trip.packingChecklist.length ? Math.round((trip.packedChecklist.length / trip.packingChecklist.length) * 100) : 0}%`},
+                      ]}
+                    />
+                  </View>
+                  <Pressable
+                    onPress={() => setTripPackedAll(trip.id, trip.packedChecklist.length < trip.packingChecklist.length)}
+                    style={local.packAll}>
+                    <Text style={s.goldText}>
+                      {trip.packedChecklist.length < trip.packingChecklist.length ? '✓ Mark all packed' : '↺ Clear packing'}
+                    </Text>
+                  </Pressable>
                   {trip.packingChecklist.map(item => {
                     const done = trip.packedChecklist.includes(item);
                     return (
@@ -434,7 +470,12 @@ export default function SavedScreen() {
                 </View>
 
                 <View style={s.adviceActions}>
-                  <Pressable onPress={() => Share.share({message: buildTripShareMessage(trip)})}><Text style={s.goldText}>Share Capsule ↗</Text></Pressable>
+                  <Pressable onPress={() => shareLook({
+                    items: trip.capsuleItems.slice(0, 6),
+                    title: trip.title,
+                    subtitle: `${trip.destination} · ${trip.duration} days`,
+                    message: buildTripShareMessage(trip),
+                  })}><Text style={s.goldText}>Share Capsule ↗</Text></Pressable>
                   <Pressable onPress={() => Alert.alert('Delete trip?', 'This trip capsule will be permanently removed.', [{text: 'Cancel'}, {text: 'Delete', style: 'destructive', onPress: () => deleteTripPlan(trip.id)}])}>
                     <Text style={s.deleteText}>Delete</Text>
                   </Pressable>
@@ -470,7 +511,13 @@ export default function SavedScreen() {
                   <Text style={s.cardTitle}>{item.items.map(piece => piece.name).join(' · ')}</Text>
                   <Text style={s.body}>{item.items.map(piece => piece.category).join(' · ')}{item.score ? ` · Score ${item.score}/100` : ''}</Text>
                   <View style={s.adviceActions}>
-                    <Pressable onPress={() => Share.share({message: `Saved Look\n\n${item.items.map(piece => `${piece.category}: ${piece.name}`).join('\n')}${item.score ? `\n\nScore: ${item.score}/100` : ''}`})}><Text style={s.goldText}>Share Look ↗</Text></Pressable>
+                    <Pressable onPress={() => shareLook({
+                      items: item.items,
+                      title: 'Saved Look',
+                      subtitle: item.items.map(piece => piece.category).join(' · '),
+                      score: item.score,
+                      message: `Saved Look\n\n${item.items.map(piece => `${piece.category}: ${piece.name}`).join('\n')}${item.score ? `\n\nScore: ${item.score}/100` : ''}\n\nStyled with Style Twist.`,
+                    })}><Text style={s.goldText}>Share Look ↗</Text></Pressable>
                     <Pressable onPress={() => Alert.alert('Delete Look?', 'This saved outfit will be permanently removed.', [{text: 'Cancel'}, {text: 'Delete', style: 'destructive', onPress: () => deleteSavedOutfit(item.id)}])}><Text style={s.deleteText}>Delete</Text></Pressable>
                   </View>
                 </View>
@@ -565,6 +612,14 @@ export default function SavedScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {shareHost}
     </Screen>
   );
 }
+
+const local = StyleSheet.create({
+  packTrack: {height: 8, borderRadius: 4, backgroundColor: colors.border, overflow: 'hidden'},
+  packFill: {height: 8, borderRadius: 4, backgroundColor: colors.emerald},
+  packAll: {alignSelf: 'flex-start', paddingVertical: 4},
+});

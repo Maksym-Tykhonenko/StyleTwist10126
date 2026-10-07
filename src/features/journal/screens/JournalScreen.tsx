@@ -1,11 +1,11 @@
 import React from 'react';
 import {ImageBackground, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {articles} from '../../../data/articles';
+import {useAppNavigation} from '../../../navigation/hooks';
 import {CardReveal, Header, HeroReveal, MotionPressable, Screen, styles as s} from '../../../ui/AppUI';
 
 export default function JournalScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
 
   return (
     <Screen>

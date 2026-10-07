@@ -3,6 +3,7 @@ import {Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollVi
 import {launchImageLibrary} from 'react-native-image-picker';
 import {categories, Category, Clothing} from '../../../data/clothing';
 import {useStore} from '../../../store';
+import {useAppNavigation} from '../../../navigation/hooks';
 import {colors} from '../../../theme';
 import {Button, Header, MotionPressable, Screen, styles as s} from '../../../ui/AppUI';
 
@@ -41,6 +42,7 @@ const categoryFacts: Record<Category, {occasion: string; silhouette: string; sea
 
 export default function WardrobeScreen() {
   const {clothes, addClothing, deleteClothing} = useStore();
+  const navigation = useAppNavigation();
   const [filter, setFilter] = useState<Category | 'All'>('All');
   const [adding, setAdding] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
@@ -84,6 +86,7 @@ export default function WardrobeScreen() {
         <View style={s.stat}><Text style={s.statValue}>{clothes.length}</Text><Text style={s.micro}>ITEMS</Text></View>
         <View style={s.stat}><Text style={[s.statValue, {color: colors.emerald}]}>{categories.length}</Text><Text style={s.micro}>CATEGORIES</Text></View>
       </View>
+      <Button secondary label="✦  Analyze My Wardrobe" onPress={() => navigation.navigate('WardrobeInsights')} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
         {(['All', ...categories] as const).map(value => <MotionPressable key={value} onPress={() => setFilter(value)} style={[s.chip, filter === value && s.chipActive]} pressScale={0.94}><Text style={[s.chipText, filter === value && s.chipTextActive]}>{value}</Text></MotionPressable>)}
       </ScrollView>

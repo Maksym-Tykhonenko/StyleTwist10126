@@ -4,6 +4,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import ChatScreen from '../features/chat/screens/ChatScreen';
 import JournalScreen from '../features/journal/screens/JournalScreen';
 import OutfitScreen from '../features/outfit/screens/OutfitScreen';
+import QuizHomeScreen from '../features/quiz/screens/QuizHomeScreen';
 import SavedScreen from '../features/saved/screens/SavedScreen';
 import TrendsScreen from '../features/trends/screens/TrendsScreen';
 import WardrobeScreen from '../features/wardrobe/screens/WardrobeScreen';
@@ -15,6 +16,7 @@ const icons: Record<keyof MainTabParamList, string> = {
   Outfit: '🧍',
   Wardrobe: '👔',
   Marco: '🕶️',
+  Quiz: '🎯',
   Saved: '🎒',
   Journal: '📰',
   Trends: '✦',
@@ -39,6 +41,7 @@ export default function MainTabs() {
       <Tab.Screen name="Outfit" component={OutfitScreen} />
       <Tab.Screen name="Wardrobe" component={WardrobeScreen} />
       <Tab.Screen name="Marco" component={ChatScreen} />
+      <Tab.Screen name="Quiz" component={QuizHomeScreen} />
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Journal" component={JournalScreen} />
       <Tab.Screen name="Trends" component={TrendsScreen} />

@@ -1,13 +1,13 @@
 import React from 'react';
 import {ImageBackground, Linking, Pressable, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {trendSources, trendStories} from '../../../data/trends';
+import {useAppNavigation} from '../../../navigation/hooks';
 import {Button, Header, Mentor, Screen, styles as s} from '../../../ui/AppUI';
 
 const years: Array<'2026' | '2027'> = ['2026', '2027'];
 
 export default function TrendsScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useAppNavigation();
 
   return (
     <Screen>
@@ -92,7 +92,7 @@ export default function TrendsScreen() {
         ))}
       </View>
 
-      <Button label="Review My Wardrobe Against Trends" onPress={() => navigation.navigate('Wardrobe')} />
+      <Button label="Review My Wardrobe Against Trends" onPress={() => navigation.navigate('WardrobeInsights')} />
     </Screen>
   );
 }

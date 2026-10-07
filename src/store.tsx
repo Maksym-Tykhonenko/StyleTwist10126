@@ -57,6 +57,7 @@ type Store = {
   deletePlannedLook: (id: string) => void;
   addTripPlan: (value: Omit<TripPlan, 'id'>) => void;
   toggleTripPackedItem: (id: string, item: string) => void;
+  setTripPackedAll: (id: string, packed: boolean) => void;
   deleteTripPlan: (id: string) => void;
   finishOnboarding: () => void;
 };
@@ -164,6 +165,9 @@ export function StoreProvider({children}: {children: React.ReactNode}) {
         : [...plan.packedChecklist, item];
       return {...plan, packedChecklist};
     })),
+    setTripPackedAll: (id, packed) => setTripPlans(current => current.map(plan =>
+      plan.id === id ? {...plan, packedChecklist: packed ? [...plan.packingChecklist] : []} : plan,
+    )),
     deleteTripPlan: id => setTripPlans(current => current.filter(item => item.id !== id)),
     finishOnboarding: () => setOnboardingDone(true),
   }), [attempts, clothes, favorites, hydrated, onboardingDone, plannedLooks, saved, savedOutfits, tripPlans]);

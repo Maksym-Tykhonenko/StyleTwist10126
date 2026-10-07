@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ImageBackground, Text, useWindowDimensions, View} from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {quiz} from '../../../data/quiz';
+import {QUIZ_QUESTION_COUNT, QUIZ_SECONDS_PER_QUESTION, quiz} from '../../../data/quiz';
 import {RootStackParamList} from '../../../navigation/types';
 import {HeroReveal, MotionPressable, Screen, styles as s} from '../../../ui/AppUI';
 
@@ -12,7 +12,7 @@ export default function QuizPlayScreen({navigation}: Props) {
   const compact = height < 760;
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [time, setTime] = useState(15);
+  const [time, setTime] = useState(QUIZ_SECONDS_PER_QUESTION);
   const [locked, setLocked] = useState(false);
   const started = useRef(Date.now());
 
@@ -24,11 +24,11 @@ export default function QuizPlayScreen({navigation}: Props) {
     const finalScore = score + Number(correct);
     setScore(finalScore);
     setTimeout(() => {
-      if (index === quiz.length - 1) {
+      if (index === QUIZ_QUESTION_COUNT - 1) {
         navigation.replace('QuizResult', {score: finalScore, duration: Math.round((Date.now() - started.current) / 1000)});
       } else {
         setIndex(value => value + 1);
-        setTime(15);
+        setTime(QUIZ_SECONDS_PER_QUESTION);
         setLocked(false);
       }
     }, 450);
@@ -50,8 +50,8 @@ export default function QuizPlayScreen({navigation}: Props) {
 
   return (
     <Screen scroll={false}>
-      <View style={s.quizTop}><Text style={s.muted}>Question {index + 1} of 5</Text><View style={s.timer}><Text style={s.online}>{time}</Text></View></View>
-      <View style={s.timerTrack}><View style={[s.timerFill, {width: `${time / 15 * 100}%`}]} /></View>
+      <View style={s.quizTop}><Text style={s.muted}>Question {index + 1} of {QUIZ_QUESTION_COUNT}</Text><View style={s.timer}><Text style={s.online}>{time}</Text></View></View>
+      <View style={s.timerTrack}><View style={[s.timerFill, {width: `${time / QUIZ_SECONDS_PER_QUESTION * 100}%`}]} /></View>
       <HeroReveal delay={120}>
         <ImageBackground source={item.image} style={[s.quizImage, compact && s.quizImageCompact]} imageStyle={s.quizImageStyle}>
           <View style={s.articleShade} />
